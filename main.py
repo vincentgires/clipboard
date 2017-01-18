@@ -51,7 +51,9 @@ class MainWindow(QtWidgets.QWidget):
     
     def createSysTray(self):
         self.sysTray = QtWidgets.QSystemTrayIcon(self)
-        self.sysTray.setIcon(QtGui.QIcon('C:/PROJECTS/clipboard/clipboard/icons/accessories-text-editor.png'))
+        dir = os.path.dirname(__file__)
+        filepath = os.path.join(dir, 'icons', 'accessories-text-editor.png')
+        self.sysTray.setIcon(QtGui.QIcon(filepath))
         self.sysTray.setVisible(True)
         #self.connect(self.sysTray, QtCore.SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.on_sys_tray_activated)
 
