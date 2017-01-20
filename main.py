@@ -11,13 +11,13 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         
         self.setIcon(self._parent.icon)
         self.setVisible(True)
-        self.activated.connect(self.show_window)
+        self.activated.connect(self.systrayActivated)
         
         menu = QtWidgets.QMenu(parent)
         show_action = menu.addAction("Show")
-        show_action.triggered.connect(self.show_window)
+        show_action.triggered.connect(self.showWindow)
         hide_action = menu.addAction("Hide")
-        hide_action.triggered.connect(self.hide_window)
+        hide_action.triggered.connect(self.hideWindow)
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.exit)
         self.setContextMenu(menu)
@@ -25,11 +25,16 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def exit(self):
         sys.exit()
         
-    def show_window(self):
+    def showWindow(self):
         self._parent.show()
         
-    def hide_window(self):
+    def hideWindow(self):
         self._parent.hide()
+        
+    def systrayActivated(self, reason):
+        if reason == self.Trigger:
+            ''' left clic '''
+            self.showWindow()
         
 
 class ClipbordEdit(QtWidgets.QTextEdit):
@@ -63,6 +68,8 @@ class MainWindow(QtWidgets.QWidget):
         to_slashes_btn.clicked.connect(self.backslashesToSlashesClicked)
         to_backslashes_btn = QtWidgets.QPushButton('\\', self)
         to_backslashes_btn.clicked.connect(self.slashesToBackslashesClicked)
+        execute_btn = QtWidgets.QPushButton('Execute', self)
+        execute_btn.clicked.connect(self.executeClicked)
         
         grid = QtWidgets.QGridLayout()
         grid.addWidget(self.clipbord_edit)
@@ -70,6 +77,7 @@ class MainWindow(QtWidgets.QWidget):
         grid.addWidget(normpath_btn)
         grid.addWidget(to_slashes_btn)
         grid.addWidget(to_backslashes_btn)
+        grid.addWidget(execute_btn)
         self.setLayout(grid) 
         
         filedir = os.path.dirname(__file__)
@@ -80,11 +88,8 @@ class MainWindow(QtWidgets.QWidget):
         self.resize(300, 200)
         self.setWindowTitle('Clipboard')    
         self.show()
-        self.createSysTray()
-    
-    
-    def createSysTray(self):
         self.sysTray = SystemTrayIcon(self)
+    
     
     def closeEvent(self, event):
         self.hide()
@@ -112,6 +117,10 @@ class MainWindow(QtWidgets.QWidget):
     def updateClicked(self):
         text = self.clipboard.text()
         self.clipbord_edit.setText(text)
+        
+    def executeClicked(self):
+        text = self.clipbord_edit.toPlainText()
+        os.system(text)
         
 
 
