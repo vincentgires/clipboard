@@ -19,6 +19,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.setIcon(self._parent.icon)
         self.setVisible(True)
         self.activated.connect(self.systrayActivated)
+        #self.messageClicked.connect(self.messageClicked)
         
         menu = QtWidgets.QMenu(parent)
         show_action = menu.addAction("Show")
@@ -28,7 +29,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.exit)
         self.setContextMenu(menu)
-    
+        
+        
     def exit(self):
         sys.exit()
         
@@ -43,10 +45,12 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         if reason == self.Trigger:
             ''' left clic '''
             self.showWindow()
-        
-
-class ClipbordEdit(QtWidgets.QTextEdit):
     
+    def messageClicked(self, *args, **kwargs):
+        print('clic on message')
+        
+    
+class ClipbordEdit(QtWidgets.QTextEdit):
     def __init__(self, parent=None):
         #super().__init__()
         super(ClipbordEdit, self).__init__()
@@ -61,7 +65,6 @@ class ClipbordEdit(QtWidgets.QTextEdit):
         #self._parent.copyClicked()
 
 class HistoryList(QtWidgets.QListWidget):
-    
     def __init__(self, parent=None):
         #super().__init__()
         super(HistoryList, self).__init__()
@@ -74,7 +77,20 @@ class HistoryList(QtWidgets.QListWidget):
     def mouseDoubleClickEvent(self, event):
         current_item = self.currentItem()
         self._parent.clipbord_edit.setText(current_item.text())
+
+class BookmarksList(QtWidgets.QListWidget):
+    def __init__(self, parent=None):
+        #super().__init__()
+        super(BookmarksList, self).__init__()
+        self._parent = parent
+        #self.setFlow(QtWidgets.QListView().LeftToRight)
         
+        self.addItem('A')
+        self.addItem('B')
+        self.addItem('C')
+        
+    def mouseDoubleClickEvent(self, event):
+        current_item = self.currentItem()
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -82,10 +98,18 @@ class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         #super().__init__()
         super(MainWindow, self).__init__()
+        
+        filedir = os.path.dirname(__file__)
+        iconpath = os.path.join(filedir, 'icons', 'accessories-text-editor.png')
+        
+        self.icon = QtGui.QIcon(iconpath)
         self.clipboard = QtWidgets.QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.onNewClipboard)
-        self.clipbord_edit = ClipbordEdit(parent=self)
-        self.clipbord_history = HistoryList(parent=self)
+        self.clipbord_edit = ClipbordEdit(self)
+        self.clipbord_history = HistoryList(self)
+        self.clipbord_bookmarks = BookmarksList(self)
+        self.sysTray = SystemTrayIcon(self)
+        
         self.initUI()
         
     def initUI(self):
@@ -137,6 +161,7 @@ class MainWindow(QtWidgets.QWidget):
         wid_right = QtWidgets.QWidget()
         col = QtWidgets.QVBoxLayout()
         col.addWidget(self.clipbord_history)
+        col.addWidget(self.clipbord_bookmarks)
         wid_right.setLayout(col)
         
         wid_main = QtWidgets.QWidget()
@@ -148,15 +173,10 @@ class MainWindow(QtWidgets.QWidget):
         self.setLayout(layout)
         # ---------------------------
         
-        filedir = os.path.dirname(__file__)
-        iconpath = os.path.join(filedir, 'icons', 'accessories-text-editor.png')
-        self.icon = QtGui.QIcon(iconpath)
+
         self.setWindowIcon(self.icon)
-        
         self.resize(500, 350)
-        self.setWindowTitle('Clipboard')    
-        self.show()
-        self.sysTray = SystemTrayIcon(self)
+        self.setWindowTitle('Clipboard')
     
     
     def closeEvent(self, event):
@@ -210,7 +230,7 @@ class MainWindow(QtWidgets.QWidget):
 
 
 if __name__ == '__main__':
-    
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
+    window.show()
     sys.exit(app.exec_())
