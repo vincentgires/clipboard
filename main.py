@@ -3,14 +3,19 @@
 import sys
 import os
 import subprocess
-from PyQt5 import QtWidgets, QtGui, QtCore
-
+try:
+    from PyQt5 import QtWidgets, QtGui, QtCore
+except ImportError:
+    from PySide import QtGui, QtCore
+    from PySide import QtGui as QtWidgets
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def __init__(self, parent=None):
-        super().__init__()
+        #super().__init__()
+        super(SystemTrayIcon, self).__init__()
         self._parent = parent
         
+        self.setToolTip('Clipboard manager')
         self.setIcon(self._parent.icon)
         self.setVisible(True)
         self.activated.connect(self.systrayActivated)
@@ -23,12 +28,13 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.exit)
         self.setContextMenu(menu)
-        
+    
     def exit(self):
         sys.exit()
         
     def showWindow(self):
         self._parent.show()
+        self._parent.activateWindow()
         
     def hideWindow(self):
         self._parent.hide()
@@ -42,7 +48,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 class ClipbordEdit(QtWidgets.QTextEdit):
     
     def __init__(self, parent=None):
-        super().__init__()
+        #super().__init__()
+        super(ClipbordEdit, self).__init__()
         self._parent = parent
         
         clipboard_text = parent.clipboard.text()
@@ -56,7 +63,8 @@ class ClipbordEdit(QtWidgets.QTextEdit):
 class HistoryList(QtWidgets.QListWidget):
     
     def __init__(self, parent=None):
-        super().__init__()
+        #super().__init__()
+        super(HistoryList, self).__init__()
         self._parent = parent
         #self.setFlow(QtWidgets.QListView().LeftToRight)
         
@@ -65,23 +73,22 @@ class HistoryList(QtWidgets.QListWidget):
         
     def mouseDoubleClickEvent(self, event):
         current_item = self.currentItem()
-        self._parent.clipboard.setText(current_item.text())
+        self._parent.clipbord_edit.setText(current_item.text())
         
 
 
 class MainWindow(QtWidgets.QWidget):
     
     def __init__(self):
-        super().__init__()
+        #super().__init__()
+        super(MainWindow, self).__init__()
         self.clipboard = QtWidgets.QApplication.clipboard()
         self.clipboard.dataChanged.connect(self.onNewClipboard)
+        self.clipbord_edit = ClipbordEdit(parent=self)
+        self.clipbord_history = HistoryList(parent=self)
         self.initUI()
         
     def initUI(self):
-        
-        self.clipbord_edit = ClipbordEdit(parent=self)
-        self.clipbord_history = HistoryList(parent=self)
-        
         copy_btn = QtWidgets.QPushButton(self)
         copy_btn.setText('Copy to clipbord')
         copy_btn.clicked.connect(self.copyClicked)            
@@ -160,6 +167,7 @@ class MainWindow(QtWidgets.QWidget):
         text = self.clipboard.text()
         self.clipbord_edit.setText(text)
         self.clipbord_history.addItem(text)
+        self.sysTray.showMessage('Clipboard', text)
         
     def copyClicked(self):
         text = self.clipbord_edit.toPlainText()
