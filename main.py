@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-import sys, os
+import sys
+import os
+import subprocess
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 
@@ -70,6 +72,8 @@ class MainWindow(QtWidgets.QWidget):
         to_backslashes_btn.clicked.connect(self.slashesToBackslashesClicked)
         execute_btn = QtWidgets.QPushButton('Execute', self)
         execute_btn.clicked.connect(self.executeClicked)
+        open_btn = QtWidgets.QPushButton('Open', self)
+        open_btn.clicked.connect(self.openClicked)
         
         grid = QtWidgets.QGridLayout()
         grid.addWidget(self.clipbord_edit)
@@ -78,10 +82,11 @@ class MainWindow(QtWidgets.QWidget):
         grid.addWidget(to_slashes_btn)
         grid.addWidget(to_backslashes_btn)
         grid.addWidget(execute_btn)
+        grid.addWidget(open_btn)
         self.setLayout(grid) 
         
         filedir = os.path.dirname(__file__)
-        iconpath = os.path.join(filedir, 'icons', 'accessories-text-editor.svg')
+        iconpath = os.path.join(filedir, 'icons', 'accessories-text-editor.png')
         self.icon = QtGui.QIcon(iconpath)
         self.setWindowIcon(self.icon)
         
@@ -120,7 +125,21 @@ class MainWindow(QtWidgets.QWidget):
         
     def executeClicked(self):
         text = self.clipbord_edit.toPlainText()
-        os.system(text)
+        try:
+            p = subprocess.Popen(text)
+        except:
+            print(sys.exc_info())
+        
+    def openClicked(self):
+        text = self.clipbord_edit.toPlainText()
+        try:
+            if sys.platform.startswith('linux'):
+                p = subprocess.Popen(['xdg-open', text])
+            elif sys.platform.startswith('win'):
+                #os.system(text)
+                p = subprocess.Popen(['start', text])
+        except:
+            print(sys.exc_info())
         
 
 
