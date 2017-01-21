@@ -44,10 +44,29 @@ class ClipbordEdit(QtWidgets.QTextEdit):
     def __init__(self, parent=None):
         super().__init__()
         self._parent = parent
+        
+        clipboard_text = parent.clipboard.text()
+        self.setText(clipboard_text)
+        
         #self.textChanged.connect(self.onTextChanged)
         
     #def onTextChanged(self):
         #self._parent.copyClicked()
+
+class HistoryList(QtWidgets.QListWidget):
+    
+    def __init__(self, parent=None):
+        super().__init__()
+        self._parent = parent
+        #self.setFlow(QtWidgets.QListView().LeftToRight)
+        
+        clipboard_text = parent.clipboard.text()
+        self.addItem(clipboard_text)
+        
+    def mouseDoubleClickEvent(self, event):
+        current_item = self.currentItem()
+        self._parent.clipboard.setText(current_item.text())
+        
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -55,13 +74,14 @@ class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.clipboard = QtWidgets.QApplication.clipboard()
-        self.clipboard.dataChanged.connect(self.updateClicked)
+        self.clipboard.dataChanged.connect(self.onNewClipboard)
         self.initUI()
         
     def initUI(self):
         
         self.clipbord_edit = ClipbordEdit(parent=self)
-        self.clipbord_edit.setText(self.clipboard.text())
+        self.clipbord_history = HistoryList(parent=self)
+        
         copy_btn = QtWidgets.QPushButton(self)
         copy_btn.setText('Copy to clipbord')
         copy_btn.clicked.connect(self.copyClicked)            
@@ -82,9 +102,11 @@ class MainWindow(QtWidgets.QWidget):
         open_btn.clicked.connect(self.openClicked)
         
         # LAYOUT -------------------
+        wid_left = QtWidgets.QWidget()
         col = QtWidgets.QVBoxLayout()
         #col.setContentsMargins(0, 0, 0, 0)
         col.addWidget(self.clipbord_edit)
+        col.addWidget(copy_btn)
         
         wid = QtWidgets.QWidget()
         row = QtWidgets.QHBoxLayout()
@@ -103,9 +125,20 @@ class MainWindow(QtWidgets.QWidget):
         wid.setLayout(row)
         col.addWidget(wid)
         
-        col.addWidget(copy_btn)
+        wid_left.setLayout(col)
         
-        self.setLayout(col)
+        wid_right = QtWidgets.QWidget()
+        col = QtWidgets.QVBoxLayout()
+        col.addWidget(self.clipbord_history)
+        wid_right.setLayout(col)
+        
+        wid_main = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(wid_left)
+        layout.addWidget(wid_right)
+        wid_main.setLayout(layout)
+        
+        self.setLayout(layout)
         # ---------------------------
         
         filedir = os.path.dirname(__file__)
@@ -122,6 +155,11 @@ class MainWindow(QtWidgets.QWidget):
     def closeEvent(self, event):
         self.hide()
         event.ignore()
+        
+    def onNewClipboard(self):
+        text = self.clipboard.text()
+        self.clipbord_edit.setText(text)
+        self.clipbord_history.addItem(text)
         
     def copyClicked(self):
         text = self.clipbord_edit.toPlainText()
@@ -142,10 +180,6 @@ class MainWindow(QtWidgets.QWidget):
         text = text.replace('\\', '/')
         self.clipboard.setText(text)
         
-    def updateClicked(self):
-        text = self.clipboard.text()
-        self.clipbord_edit.setText(text)
-        
     def executeClicked(self):
         text = self.clipbord_edit.toPlainText()
         try:
@@ -164,7 +198,6 @@ class MainWindow(QtWidgets.QWidget):
         except:
             print(sys.exc_info())
         
-
 
 
 
