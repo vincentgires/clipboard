@@ -3,6 +3,13 @@
 import sys
 import os
 import subprocess
+import json
+
+user_folder = os.path.expanduser('~')
+BOOKMARKS_FILE = os.path.join(user_folder, '.clipboard_bookmarks')
+
+
+
 try:
     from PyQt5 import QtWidgets, QtGui, QtCore
 except ImportError:
@@ -77,6 +84,7 @@ class HistoryList(QtWidgets.QListWidget):
     def mouseDoubleClickEvent(self, event):
         current_item = self.currentItem()
         self._parent.clipbord_edit.setText(current_item.text())
+    
 
 class BookmarksList(QtWidgets.QListWidget):
     def __init__(self, parent=None):
@@ -84,15 +92,29 @@ class BookmarksList(QtWidgets.QListWidget):
         super(BookmarksList, self).__init__()
         self._parent = parent
         #self.setFlow(QtWidgets.QListView().LeftToRight)
-        
-        self.addItem('A')
-        self.addItem('B')
-        self.addItem('C')
+        if os.path.exists(BOOKMARKS_FILE):
+            with open(BOOKMARKS_FILE, 'r') as file:
+                items = json.load(file)
+            for i in items:
+                self.addItem(i)
         
     def mouseDoubleClickEvent(self, event):
         current_item = self.currentItem()
-
-
+        self._parent.clipboard.setText(current_item.text())
+        
+    def addBookmark(self):
+        text = self._parent.clipbord_edit.toPlainText()
+        self.addItem(text)
+        with open(BOOKMARKS_FILE, 'w') as file:
+            json.dump(self.getItems(), file)
+        
+    def getItems(self):
+        items = []
+        for i in range(self.count()):
+            item = self.item(i).text()
+            items.append(item)
+        return items
+    
 class MainWindow(QtWidgets.QWidget):
     
     def __init__(self):
@@ -100,7 +122,8 @@ class MainWindow(QtWidgets.QWidget):
         super(MainWindow, self).__init__()
         
         filedir = os.path.dirname(__file__)
-        iconpath = os.path.join(filedir, 'icons', 'accessories-text-editor.png')
+        iconpath = os.path.join(filedir, 'icons',
+                                'accessories-text-editor.png')
         
         self.icon = QtGui.QIcon(iconpath)
         self.clipboard = QtWidgets.QApplication.clipboard()
@@ -131,6 +154,12 @@ class MainWindow(QtWidgets.QWidget):
         open_btn = QtWidgets.QPushButton(self)
         open_btn.setText('Open')
         open_btn.clicked.connect(self.openClicked)
+        clearHistory_btn = QtWidgets.QToolButton(self)
+        clearHistory_btn.setText('Clean history')
+        clearHistory_btn.clicked.connect(self.clipbord_history.clear)
+        addBookmark_btn = QtWidgets.QToolButton(self)
+        addBookmark_btn.setText('Add to bookmarks')
+        addBookmark_btn.clicked.connect(self.clipbord_bookmarks.addBookmark) 
         
         # LAYOUT -------------------
         wid_left = QtWidgets.QWidget()
@@ -161,7 +190,9 @@ class MainWindow(QtWidgets.QWidget):
         wid_right = QtWidgets.QWidget()
         col = QtWidgets.QVBoxLayout()
         col.addWidget(self.clipbord_history)
+        col.addWidget(clearHistory_btn)
         col.addWidget(self.clipbord_bookmarks)
+        col.addWidget(addBookmark_btn)
         wid_right.setLayout(col)
         
         wid_main = QtWidgets.QWidget()
@@ -187,7 +218,7 @@ class MainWindow(QtWidgets.QWidget):
         text = self.clipboard.text()
         self.clipbord_edit.setText(text)
         self.clipbord_history.addItem(text)
-        self.sysTray.showMessage('Clipboard', text)
+        #self.sysTray.showMessage('Clipboard', text)
         
     def copyClicked(self):
         text = self.clipbord_edit.toPlainText()
