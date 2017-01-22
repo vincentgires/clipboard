@@ -1,4 +1,7 @@
-
 FEATURE:
+- search in history
 - bookmarks, save useful clipboard with shortcut assignation
+- add new clipboard to the history only if it doesn't exist, and reorder the list
+- systray menu: open/execute button (done)
+- clic on systray: put windows to the front (done)
 - execute command (done)

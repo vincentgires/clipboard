@@ -48,6 +48,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def showWindow(self):
         self._parent.show()
         self._parent.activateWindow()
+        self._parent.setWindowState(self._parent.windowState() & ~QtCore.Qt.WindowMinimized | QtCore.Qt.WindowActive)
         
     def hideWindow(self):
         self._parent.hide()
@@ -57,8 +58,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             ''' left clic '''
             self.showWindow()
     
-    def messageClicked(self, *args, **kwargs):
-        print('clic on message')
+    #def messageClicked(self):
+        #print('clic on message')
         
     
 class ClipbordEdit(QtWidgets.QTextEdit):
