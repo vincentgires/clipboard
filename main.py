@@ -29,11 +29,15 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         #self.messageClicked.connect(self.messageClicked)
         
         menu = QtWidgets.QMenu(parent)
-        show_action = menu.addAction("Show")
+        open_action = menu.addAction('Open clipboard')
+        open_action.triggered.connect(self._parent.openClicked)
+        execute_action = menu.addAction('Execute clipboar')
+        execute_action.triggered.connect(self._parent.executeClicked)
+        show_action = menu.addAction('Show window')
         show_action.triggered.connect(self.showWindow)
-        hide_action = menu.addAction("Hide")
+        hide_action = menu.addAction('Hide window')
         hide_action.triggered.connect(self.hideWindow)
-        exit_action = menu.addAction("Exit")
+        exit_action = menu.addAction('Exit')
         exit_action.triggered.connect(self.exit)
         self.setContextMenu(menu)
         
