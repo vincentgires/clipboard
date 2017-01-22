@@ -105,8 +105,12 @@ class BookmarksList(QtWidgets.QListWidget):
     def addBookmark(self):
         text = self._parent.clipbord_edit.toPlainText()
         self.addItem(text)
-        with open(BOOKMARKS_FILE, 'w') as file:
-            json.dump(self.getItems(), file)
+        self.updateConfigFile()
+        
+    def removeBookmark(self):
+        current_index = self.currentRow()
+        self.takeItem(current_index)
+        self.updateConfigFile()
         
     def getItems(self):
         items = []
@@ -114,6 +118,10 @@ class BookmarksList(QtWidgets.QListWidget):
             item = self.item(i).text()
             items.append(item)
         return items
+    
+    def updateConfigFile(self):
+        with open(BOOKMARKS_FILE, 'w') as file:
+            json.dump(self.getItems(), file)
     
 class MainWindow(QtWidgets.QWidget):
     
@@ -154,12 +162,15 @@ class MainWindow(QtWidgets.QWidget):
         open_btn = QtWidgets.QPushButton(self)
         open_btn.setText('Open')
         open_btn.clicked.connect(self.openClicked)
-        clearHistory_btn = QtWidgets.QToolButton(self)
-        clearHistory_btn.setText('Clean history')
+        clearHistory_btn = QtWidgets.QPushButton(self)
+        clearHistory_btn.setText('Clear history')
         clearHistory_btn.clicked.connect(self.clipbord_history.clear)
-        addBookmark_btn = QtWidgets.QToolButton(self)
-        addBookmark_btn.setText('Add to bookmarks')
+        addBookmark_btn = QtWidgets.QPushButton(self)
+        addBookmark_btn.setText('Add bookmark')
         addBookmark_btn.clicked.connect(self.clipbord_bookmarks.addBookmark) 
+        removeBookmark_btn = QtWidgets.QPushButton(self)
+        removeBookmark_btn.setText('Remove bookmark')
+        removeBookmark_btn.clicked.connect(self.clipbord_bookmarks.removeBookmark) 
         
         # LAYOUT -------------------
         wid_left = QtWidgets.QWidget()
@@ -193,6 +204,7 @@ class MainWindow(QtWidgets.QWidget):
         col.addWidget(clearHistory_btn)
         col.addWidget(self.clipbord_bookmarks)
         col.addWidget(addBookmark_btn)
+        col.addWidget(removeBookmark_btn)
         wid_right.setLayout(col)
         
         wid_main = QtWidgets.QWidget()
