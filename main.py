@@ -5,16 +5,14 @@ import os
 import subprocess
 import json
 
-user_folder = os.path.expanduser('~')
-BOOKMARKS_FILE = os.path.join(user_folder, '.clipboard_bookmarks')
-
-
-
 try:
     from PyQt5 import QtWidgets, QtGui, QtCore
 except ImportError:
     from PySide import QtGui, QtCore
     from PySide import QtGui as QtWidgets
+
+user_folder = os.path.expanduser('~')
+BOOKMARKS_FILE = os.path.join(user_folder, '.clipboard_bookmarks')
 
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def __init__(self, parent=None):
@@ -265,12 +263,15 @@ class MainWindow(QtWidgets.QWidget):
         
     def openClicked(self):
         text = self.clipbord_edit.toPlainText()
+        text = os.path.normpath(text)
         try:
             if sys.platform.startswith('linux'):
                 p = subprocess.Popen(['xdg-open', text])
             elif sys.platform.startswith('win'):
-                #os.system(text)
-                p = subprocess.Popen(['start', text])
+                if os.path.isdir(text):
+                    p = subprocess.Popen(['explorer', text])
+                else:
+                    os.system(text)
         except:
             print(sys.exc_info())
         
